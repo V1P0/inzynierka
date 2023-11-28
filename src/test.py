@@ -1,19 +1,22 @@
 import numpy as np
 from environment import PaperSoccer
 from mcts import MCTS
+from alpha_zero import ResNet, AlphaMCTS
+import torch
 
 
 def main():
     game = PaperSoccer()
     args = {
         'C': 1.41,
-        'num_searches': 3_000
+        'num_searches': 300
     }
-
-    bot = MCTS(game, args)
+    device = "cpu" # torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = ResNet(game, 5, 128, device)
+    bot = AlphaMCTS(game, args, model)
     state = game.get_initial_state()
     is_terminal = False
-    bot_playing = False
+    bot_playing = True
     action_mapper = {
         2: 0,
         3: 1,
@@ -33,6 +36,7 @@ def main():
         if bot_playing:
             state = game.change_perspective(state, player=-1)
             probs = bot.search(state)
+            print(probs)
             action = np.argmax(probs)
             state, player = game.get_next_state(state, action, 1)
             state = game.change_perspective(state, player=-1)

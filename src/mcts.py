@@ -70,7 +70,7 @@ class Node:
                 return value
 
     def backpropagate(self, value):
-        self.value_sum += -value*self.player
+        self.value_sum += value*self.player
         self.visit_count += 1
 
         if self.parent is not None:
@@ -91,7 +91,7 @@ class MCTS:
                 node = node.select()
 
             value, is_terminal = self.game.get_value_and_terminated(node.state, node.prev_player)
-            if node.prev_player == -1:
+            if node.prev_player == 1:
                 value = self.game.get_opponent_value(value)
 
             if not is_terminal:

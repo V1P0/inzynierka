@@ -97,15 +97,15 @@ class Board:
 
 class PaperSoccer:
     def __init__(self):
-        self.rows = 13
-        self.cols = 9
+        self.row_count = 13
+        self.column_count = 9
         self.action_size = 8
 
     def get_initial_state(self) -> Board:
         """
         :return: initial state of the game
         """
-        return Board(self.rows, self.cols)
+        return Board(self.row_count, self.column_count)
 
     def get_next_state(self, state: Board, action, player) -> (Board, int):
         """
@@ -172,18 +172,27 @@ class PaperSoccer:
         return state
 
     def get_encoded_state(self, state):
-        player = np.full((state.width, state.height), 0)
-        player[state.playerX][state.playerY] = 1
+        # Player position
+        player = np.zeros((state.width, state.height), dtype=np.float32)
+        player[state.playerX, state.playerY] = 1
 
-        possible_moves = np.full((state.width, state.height), 0)
+        # Possible moves
+        possible_moves = np.zeros((state.width, state.height), dtype=np.float32)
         moves = self.get_valid_moves(state)
-        for i in range(len(moves)):
-            if moves[i] == 1:
-                possible_moves[state.playerX + state.moves[i][0]][state.playerY + state.moves[i][1]] = 1
+        for i, move in enumerate(moves):
+            if move:
+                dx, dy = state.moves[i]
+                new_x, new_y = state.playerX + dx, state.playerY + dy
+                possible_moves[new_x, new_y] = 1
+
+        # Ensure the connections array is in the shape [8, width, height]
+        connections = np.transpose(state.connections, (2, 0, 1))
 
         encoded_state = np.stack(
-            (state.connections, state.visited, player, possible_moves),
+            (player, possible_moves, state.visited, connections[0], connections[1], connections[2], connections[3],
+                connections[4], connections[5], connections[6], connections[7]),
         )
+
         return encoded_state
 
     def print_history(self, state):
