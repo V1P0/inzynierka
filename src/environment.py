@@ -13,6 +13,7 @@ class Board:
         self.visited[self.playerX][self.playerY] = True
         self.width: int = columns
         self.height: int = rows
+        self.moves = [(0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
         for i in range(1, rows - 1):
             self.connections[0][i][7] = False
             self.connections[0][i][6] = False
@@ -79,7 +80,7 @@ class Board:
 
     def move(self, direction):
         # 0 - down, 1 - down right, 2 - right, 3 - up right, 4 - up, 5 - up left, 6 - left, 7 - down left
-        moves = [(0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+        moves = self.moves
         changeX, changeY = moves[direction]
         prevX = self.playerX
         prevY = self.playerY
@@ -170,6 +171,21 @@ class PaperSoccer:
             state.connections = np.roll(state.connections, 4, axis=2)
         return state
 
+    def get_encoded_state(self, state):
+        player = np.full((state.width, state.height), 0)
+        player[state.playerX][state.playerY] = 1
+
+        possible_moves = np.full((state.width, state.height), 0)
+        moves = self.get_valid_moves(state)
+        for i in range(len(moves)):
+            if moves[i] == 1:
+                possible_moves[state.playerX + state.moves[i][0]][state.playerY + state.moves[i][1]] = 1
+
+        encoded_state = np.stack(
+            (state.connections, state.visited, player, possible_moves),
+        )
+        return encoded_state
+
     def print_history(self, state):
         for x in state.history:
             print(x, end="")
@@ -204,7 +220,7 @@ class PaperSoccer:
                     elif state.visited[j//2][i//2]:
                         print("x", end="")
                     else:
-                        print(" ", end="")
+                        print(".", end="")
             print()
         print()
 

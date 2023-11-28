@@ -55,7 +55,7 @@ class Node:
         if is_terminal:
             if self.prev_player == -1:
                 value = self.game.get_opponent_value(value)
-            return value*self.player
+            return value
 
         rollout_state = self.state
         rollout_player = 1
@@ -67,7 +67,7 @@ class Node:
             if is_terminal:
                 if rollout_player == -1:
                     value = self.game.get_opponent_value(value)
-                return value*self.player
+                return value
 
     def backpropagate(self, value):
         self.value_sum += -value*self.player

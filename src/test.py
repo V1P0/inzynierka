@@ -7,13 +7,13 @@ def main():
     game = PaperSoccer()
     args = {
         'C': 1.41,
-        'num_searches': 1_000
+        'num_searches': 3_000
     }
 
     bot = MCTS(game, args)
     state = game.get_initial_state()
     is_terminal = False
-    bot_playing = True
+    bot_playing = False
     action_mapper = {
         2: 0,
         3: 1,
@@ -24,9 +24,6 @@ def main():
         4: 6,
         1: 7
     }
-
-    state.playerY = 10
-    state.playerX = 1
 
     while not is_terminal:
         game.print_board(state)
