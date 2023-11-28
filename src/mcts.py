@@ -3,13 +3,13 @@ import math
 from environment import PaperSoccer
 
 
-
 class Node:
-    def __init__(self, game: PaperSoccer, args, state, player, parent=None, action_taken=None):
+    def __init__(self, game: PaperSoccer, args, state, player, prev_player, parent=None, action_taken=None):
         self.game: PaperSoccer = game
         self.args = args
         self.state = state
         self.parent = parent
+        self.prev_player = prev_player
         self.player = player
         self.action_taken = action_taken
 
@@ -45,16 +45,17 @@ class Node:
         child_state, player = self.game.get_next_state(self.state, action, 1)
         child_state = self.game.change_perspective(child_state, player=player)
 
-        child = Node(self.game, self.args, child_state, player, self, action)
+        child = Node(self.game, self.args, child_state, self.player*player, self.player, self, action)
         self.children.append(child)
         return child
 
     def simulate(self):
-        value, is_terminal = self.game.get_value_and_terminated(self.state, 1)
-        value = self.game.get_opponent_value(value)
+        value, is_terminal = self.game.get_value_and_terminated(self.state, self.prev_player)
 
         if is_terminal:
-            return value
+            if self.prev_player == -1:
+                value = self.game.get_opponent_value(value)
+            return value*self.player
 
         rollout_state = self.state
         rollout_player = 1
@@ -66,14 +67,12 @@ class Node:
             if is_terminal:
                 if rollout_player == -1:
                     value = self.game.get_opponent_value(value)
-                return value
+                return value*self.player
 
     def backpropagate(self, value):
-        self.value_sum += value
+        self.value_sum += -value*self.player
         self.visit_count += 1
 
-        if self.player == -1:
-            value = self.game.get_opponent_value(value)
         if self.parent is not None:
             self.parent.backpropagate(value)
 
@@ -84,16 +83,16 @@ class MCTS:
         self.args = args
 
     def search(self, state):
-        root = Node(self.game, self.args, state, 1)
-
+        root = Node(self.game, self.args, state, 1, 1)
         for search in range(self.args['num_searches']):
             node = root
 
             while node.is_fully_expanded():
                 node = node.select()
 
-            value, is_terminal = self.game.get_value_and_terminated(node.state, node.action_taken)
-            value = self.game.get_opponent_value(value)
+            value, is_terminal = self.game.get_value_and_terminated(node.state, node.prev_player)
+            if node.prev_player == -1:
+                value = self.game.get_opponent_value(value)
 
             if not is_terminal:
                 node = node.expand()

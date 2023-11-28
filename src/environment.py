@@ -131,7 +131,7 @@ class PaperSoccer:
     def get_value_and_terminated(self, state, player) -> (int, bool):
         """
         :param state: current state of the game
-        :param player: player who took the last move
+        :param player: player whose turn it is
         :return: value of the game for the player who is making the move, True if the game is over
         """
         valid_moves = self.get_valid_moves(state)
