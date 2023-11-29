@@ -9,9 +9,11 @@ def main():
     game = PaperSoccer()
     args = {
         'C': 1.41,
-        'num_searches': 300
+        'num_searches': 300,
+        'dirichlet_epsilon': 0.25,
+        'dirichlet_alpha': 0.3
     }
-    device = "cpu" # torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = ResNet(game, 5, 128, device)
     bot = AlphaMCTS(game, args, model)
     state = game.get_initial_state()

@@ -113,7 +113,8 @@ class AlphaNode:
                 child_state, player = self.game.get_next_state(child_state, action, 1)
                 child_state = self.game.change_perspective(child_state, player=player)
 
-                child = AlphaNode(self.game, self.args, child_state, self.player * player, self.player, self, action, prob)
+                child = AlphaNode(self.game, self.args, child_state, self.player * player, self.player, self, action,
+                                  prob)
                 self.children.append(child)
 
     def backpropagate(self, value):
@@ -134,7 +135,19 @@ class AlphaMCTS:
     def search(self, state):
         root = AlphaNode(self.game, self.args, state, 1, 1)
         for search in range(self.args['num_searches']):
+
             node = root
+            policy, _ = self.model(
+                torch.tensor(self.game.get_encoded_state(state), device=self.model.device).unsqueeze(0)
+            )
+            policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
+            policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] \
+                     * np.random.dirichlet([self.args['dirichlet_alpha']] * self.game.action_size)
+
+            valid_moves = self.game.get_valid_moves(state)
+            policy *= valid_moves
+            policy /= np.sum(policy)
+            root.expand(policy)
 
             while node.is_fully_expanded():
                 node = node.select()
@@ -144,9 +157,9 @@ class AlphaMCTS:
                 value = self.game.get_opponent_value(value)
 
             if not is_terminal:
-                policy, value = self.model(torch.tensor(
-                    self.game.get_encoded_state(node.state)
-                ).unsqueeze(0))
+                policy, value = self.model(
+                    torch.tensor(self.game.get_encoded_state(node.state), device=self.model.device).unsqueeze(0)
+                )
                 policy = torch.softmax(policy, dim=1).squeeze(0).cpu().numpy()
                 valid_moves = self.game.get_valid_moves(node.state)
                 policy *= valid_moves

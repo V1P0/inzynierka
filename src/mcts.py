@@ -55,7 +55,7 @@ class Node:
         if is_terminal:
             if self.prev_player == -1:
                 value = self.game.get_opponent_value(value)
-            return value
+            return value * self.player
 
         rollout_state = self.state
         rollout_player = 1
@@ -67,7 +67,7 @@ class Node:
             if is_terminal:
                 if rollout_player == -1:
                     value = self.game.get_opponent_value(value)
-                return value
+                return value * self.player
 
     def backpropagate(self, value):
         self.value_sum += value*self.player
@@ -91,7 +91,7 @@ class MCTS:
                 node = node.select()
 
             value, is_terminal = self.game.get_value_and_terminated(node.state, node.prev_player)
-            if node.prev_player == 1:
+            if node.prev_player == -1:
                 value = self.game.get_opponent_value(value)
 
             if not is_terminal:
