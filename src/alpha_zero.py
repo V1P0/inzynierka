@@ -118,7 +118,7 @@ class AlphaNode:
                 self.children.append(child)
 
     def backpropagate(self, value):
-        self.value_sum += value * self.player
+        self.value_sum += -value * self.player
         self.visit_count += 1
 
         if self.parent is not None:
@@ -134,26 +134,26 @@ class AlphaMCTS:
     @torch.no_grad()
     def search(self, state):
         root = AlphaNode(self.game, self.args, state, 1, 1)
+
+        policy, _ = self.model(
+            torch.tensor(self.game.get_encoded_state(state), device=self.model.device).unsqueeze(0)
+        )
+        policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
+        policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] \
+                 * np.random.dirichlet([self.args['dirichlet_alpha']] * self.game.action_size)
+
+        valid_moves = self.game.get_valid_moves(state)
+        policy *= valid_moves
+        policy /= np.sum(policy)
+        root.expand(policy)
         for search in range(self.args['num_searches']):
-
             node = root
-            policy, _ = self.model(
-                torch.tensor(self.game.get_encoded_state(state), device=self.model.device).unsqueeze(0)
-            )
-            policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
-            policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] \
-                     * np.random.dirichlet([self.args['dirichlet_alpha']] * self.game.action_size)
-
-            valid_moves = self.game.get_valid_moves(state)
-            policy *= valid_moves
-            policy /= np.sum(policy)
-            root.expand(policy)
 
             while node.is_fully_expanded():
                 node = node.select()
 
-            value, is_terminal = self.game.get_value_and_terminated(node.state, node.prev_player)
-            if node.prev_player == -1:
+            value, is_terminal = self.game.get_value_and_terminated(node.state, 1)
+            if node.player == -1:
                 value = self.game.get_opponent_value(value)
 
             if not is_terminal:
@@ -190,18 +190,17 @@ class AlphaZero:
         player = 1
         state = self.game.get_initial_state()
 
+        neutral_state = state
         while True:
-            neutral_state = self.game.change_perspective(state, player)
             action_probs = self.mcts.search(neutral_state)
 
             memory.append((neutral_state, action_probs, player))
 
-            temperature_action_probs = action_probs ** (1 / self.args['temperature'])
-            action = np.random.choice(self.game.action_size, p=action_probs)  # change to temperature_action_probs
+            action = np.random.choice(self.game.action_size, p=action_probs)
 
-            state = self.game.get_next_state(state, action, player)
+            state, next_player = self.game.get_next_state(state, action, player)
 
-            value, is_terminal = self.game.get_value_and_terminated(state, action)
+            value, is_terminal = self.game.get_value_and_terminated(state, player)
 
             if is_terminal:
                 returnMemory = []
@@ -214,7 +213,8 @@ class AlphaZero:
                     ))
                 return returnMemory
 
-            player = self.game.get_opponent(player)
+            player = next_player
+            neutral_state = self.game.change_perspective(state, player=-1 if player != next_player else 1)
 
     def train(self, memory):
         random.shuffle(memory)
@@ -243,14 +243,17 @@ class AlphaZero:
     def learn(self):
         for iteration in range(self.args['num_iterations']):
             memory = []
+            print("Iteration: ", iteration)
 
             self.model.eval()
             for selfPlay_iteration in range(self.args['num_selfPlay_iterations']):
                 memory += self.selfPlay()
+                print("Self play iteration finished: ", selfPlay_iteration)
 
             self.model.train()
             for epoch in range(self.args['num_epochs']):
                 self.train(memory)
+                print("Epoch finished: ", epoch)
 
             torch.save(self.model.state_dict(), f"model_{iteration}_{self.game}.pt")
             torch.save(self.optimizer.state_dict(), f"optimizer_{iteration}_{self.game}.pt")

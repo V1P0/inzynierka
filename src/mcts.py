@@ -50,11 +50,9 @@ class Node:
         return child
 
     def simulate(self):
-        value, is_terminal = self.game.get_value_and_terminated(self.state, self.prev_player)
+        value, is_terminal = self.game.get_value_and_terminated(self.state, 1)
 
         if is_terminal:
-            if self.prev_player == -1:
-                value = self.game.get_opponent_value(value)
             return value * self.player
 
         rollout_state = self.state
@@ -62,15 +60,14 @@ class Node:
         while True:
             valid_moves = self.game.get_valid_moves(rollout_state)
             action = np.random.choice(np.where(valid_moves == 1)[0])
-            rollout_state, rollout_player = self.game.get_next_state(rollout_state, action, rollout_player)
+            rollout_state, new_player = self.game.get_next_state(rollout_state, action, rollout_player)
             value, is_terminal = self.game.get_value_and_terminated(rollout_state, rollout_player)
             if is_terminal:
-                if rollout_player == -1:
-                    value = self.game.get_opponent_value(value)
                 return value * self.player
+            rollout_player = new_player
 
     def backpropagate(self, value):
-        self.value_sum += value*self.player
+        self.value_sum += -value*self.prev_player
         self.visit_count += 1
 
         if self.parent is not None:
@@ -90,9 +87,8 @@ class MCTS:
             while node.is_fully_expanded():
                 node = node.select()
 
-            value, is_terminal = self.game.get_value_and_terminated(node.state, node.prev_player)
-            if node.prev_player == -1:
-                value = self.game.get_opponent_value(value)
+            value, is_terminal = self.game.get_value_and_terminated(node.state, 1)
+            value = value * node.player
 
             if not is_terminal:
                 node = node.expand()

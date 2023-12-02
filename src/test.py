@@ -9,13 +9,13 @@ def main():
     game = PaperSoccer()
     args = {
         'C': 1.41,
-        'num_searches': 300,
+        'num_searches': 3_000,
         'dirichlet_epsilon': 0.25,
         'dirichlet_alpha': 0.3
     }
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = ResNet(game, 5, 128, device)
-    bot = AlphaMCTS(game, args, model)
+    bot = MCTS(game, args)
     state = game.get_initial_state()
     is_terminal = False
     bot_playing = True
@@ -29,6 +29,9 @@ def main():
         4: 6,
         1: 7
     }
+
+    # state.playerY = 10
+    # state.playerX = 1
 
     while not is_terminal:
         game.print_board(state)

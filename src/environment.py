@@ -78,6 +78,13 @@ class Board:
         self.connections[columns // 2 + 1][rows - 2][2] = False
         self.visited[columns // 2 + 1][rows - 2] = True
 
+        self.visited[columns // 2-1][0] = True
+        self.visited[columns // 2][0] = True
+        self.visited[columns // 2+1][0] = True
+        self.visited[columns // 2-1][rows-1] = True
+        self.visited[columns // 2][rows-1] = True
+        self.visited[columns // 2+1][rows-1] = True
+
     def move(self, direction):
         # 0 - down, 1 - down right, 2 - right, 3 - up right, 4 - up, 5 - up left, 6 - left, 7 - down left
         moves = self.moves
