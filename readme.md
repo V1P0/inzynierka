@@ -10,4 +10,4 @@ Opis gry znajduje się na [wikipedii](https://en.wikipedia.org/wiki/Paper_soccer
 # Co jest do zrobienia
  - [x] Stworzenie środowiska do gry
  - [x] Stworzenie agenta klasycznego (MCTS)
- - [ ] Stworzenie agenta opartego o alpha zero
+ - [x] Stworzenie agenta opartego o alpha zero

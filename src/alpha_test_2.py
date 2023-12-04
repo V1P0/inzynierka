@@ -7,7 +7,7 @@ import torch
 
 def main():
     args = {
-        'C': 2,
+        'C': 5,
         'num_searches': 300,
         'num_iterations': 8,
         'num_selfPlay_iterations': 500,
@@ -19,7 +19,7 @@ def main():
         'dirichlet_alpha': 0.3
     }
     args2 = {
-        'C': 2,
+        'C': 5,
         'num_searches': 1000,
         'num_iterations': 8,
         'num_selfPlay_iterations': 500,
