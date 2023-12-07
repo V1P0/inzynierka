@@ -7,8 +7,8 @@ import torch
 
 def main():
     args = {
-        'C': 5,
-        'num_searches': 300,
+        'C': 2,
+        'num_searches': 500,
         'num_iterations': 8,
         'num_selfPlay_iterations': 500,
         'num_parallel_games': 100,
@@ -19,7 +19,7 @@ def main():
         'dirichlet_alpha': 0.3
     }
     args2 = {
-        'C': 5,
+        'C': 2,
         'num_searches': 1000,
         'num_iterations': 8,
         'num_selfPlay_iterations': 500,
@@ -34,7 +34,7 @@ def main():
     game = PaperSoccer()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = ResNet(game, 9, 128, device)
-    model.load_state_dict(torch.load("model_test.pt", map_location=device))
+    model.load_state_dict(torch.load("model_13.pt", map_location=device))
     model.eval()
 
     bot = AlphaMCTS(game, args, model)

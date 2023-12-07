@@ -5,6 +5,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import multiprocessing
 from environment import PaperSoccer
 
 
@@ -175,6 +176,10 @@ class AlphaMCTS:
             action_probs[child.action_taken] = child.visit_count
         action_probs /= np.sum(action_probs)
         return action_probs
+
+
+def self_play_wrapper(alpha_zero_instance):
+    return alpha_zero_instance.selfPlay()
 
 
 class AlphaZero:
