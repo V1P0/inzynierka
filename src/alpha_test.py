@@ -7,9 +7,8 @@ def main():
     args = {
         'C': 2,
         'num_searches': 600,
-        'num_iterations': 8,
-        'num_selfPlay_iterations': 5,
-        'num_parallel_games': 10,
+        'num_iterations': 600,
+        'num_selfPlay_iterations': 100,
         'num_epochs': 4,
         'batch_size': 128,
         'temperature': 1.25,
